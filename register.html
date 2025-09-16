@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体育用品销售系统 - 注册</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/layui-src/dist/css/layui.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        /* 保持原有样式不变 */
+        body {
+            background-color: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .register-container {
+            width: 100%;
+            max-width: 420px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .register-header {
+            background-color: #1E9FFF;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        .register-header h1 {
+            font-size: 24px;
+            margin: 0;
+        }
+        .register-body {
+            padding: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .layui-form-label {
+            width: 70px;
+        }
+        .layui-input-block {
+            margin-left: 100px;
+        }
+        .register-footer {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .register-footer a {
+            color: #1E9FFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <h1><i class="fa fa-futbol-o"></i> 体育用品销售系统</h1>
+        </div>
+        <div class="register-body">
+            <form class="layui-form" id="registerForm">
+                <div class="form-group">
+                    <label class="layui-form-label">用户名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="username" lay-verify="required" placeholder="请输入用户名" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="layui-form-label">密码</label>
+                    <div class="layui-input-block">
+                        <input type="password" name="password" lay-verify="required|checkPassword" placeholder="请输入密码（至少6位）" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="layui-form-label">确认密码</label>
+                    <div class="layui-input-block">
+                        <input type="password" name="repassword" lay-verify="required|checkRepassword" placeholder="请再次输入密码" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="layui-form-label">邮箱</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="email" lay-verify="required|email" placeholder="请输入邮箱" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="layui-input-block">
+                        <button class="layui-btn layui-btn-normal layui-btn-fluid" lay-submit lay-filter="register">注册</button>
+                    </div>
+                </div>
+                <div class="register-footer">
+                    <p>已有账号？<a href="login.html">立即登录</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/layui-src/dist/layui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script>
+        layui.use(['form', 'layer'], function() {
+            var form = layui.form;
+            var layer = layui.layer;
+
+            // 自定义密码验证规则
+            form.verify({
+                // 密码验证：至少6位
+                checkPassword: function(value) {
+                    if (value.length < 6) {
+                        return '密码长度不能少于6位';
+                    }
+                    // 可以添加更多验证规则，如必须包含字母和数字
+                    // if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(value)) {
+                    //     return '密码必须包含字母和数字，且至少6位';
+                    // }
+                },
+                // 确认密码验证：必须与密码一致
+                checkRepassword: function(value) {
+                    var password = $('input[name="password"]').val();
+                    if (value !== password) {
+                        return '两次输入的密码不一致';
+                    }
+                }
+            });
+			// 注册表单提交
+			form.on('submit(register)', function(data) {
+			    // 获取本地存储的用户数据
+			    var users = JSON.parse(localStorage.getItem('users') || '[]');
+			    
+			    // 检查用户名是否已存在
+			    var exists = users.some(u => u.username === data.field.username);
+			    if (exists) {
+			        layer.msg('用户名已存在', {icon: 2});
+			        return false;
+			    }
+			    
+			    // 创建新用户
+			    var newUser = {
+			        id: Date.now(),
+			        username: data.field.username,
+			        password: data.field.password,
+			        email: data.field.email,
+			        role: 'user' // 默认普通用户
+			    };
+			    
+			    // 保存用户数据
+			    users.push(newUser);
+			    localStorage.setItem('users', JSON.stringify(users));
+			    
+			    // 自动登录
+			    localStorage.setItem('currentUser', JSON.stringify(newUser));
+			    
+			    layer.msg('注册成功，正在跳转...', {icon: 1}, function() {
+			        window.location.href = 'index.html';
+			    });
+			    
+			    return false;
+			});
+        });
+    </script>
+</body>
+</html>

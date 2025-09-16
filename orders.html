@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体育用品销售系统 - 我的订单</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/layui-src/dist/css/layui.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        .layui-card { margin: 15px; }
+        .search-bar { padding: 15px; background: #f5f5f5; border-radius: 4px; margin-bottom: 15px; }
+        .order-item { border: 1px solid #eee; border-radius: 4px; margin-bottom: 15px; }
+        .order-header { background: #f9f9f9; padding: 10px 15px; display: flex; justify-content: space-between; }
+        .order-status { color: #ff4d4f; font-weight: bold; }
+        .order-body { padding: 15px; }
+        .order-goods { display: flex; padding: 10px 0; border-bottom: 1px dashed #eee; }
+        .order-goods:last-child { border-bottom: none; }
+        .order-goods-img { width: 80px; height: 80px; margin-right: 15px; }
+        .order-goods-img img { width: 100%; height: 100%; object-fit: cover; }
+        .order-goods-info { flex: 1; }
+        .order-goods-price { width: 100px; text-align: center; }
+        .order-goods-quantity { width: 80px; text-align: center; }
+        .order-goods-total { width: 120px; text-align: center; font-weight: bold; }
+        .order-footer { padding: 10px 15px; text-align: right; border-top: 1px solid #eee; }
+        .order-total { font-size: 16px; color: #ff4d4f; font-weight: bold; margin-bottom: 10px; }
+        .empty-order { text-align: center; padding: 50px 0; color: #999; }
+        .empty-order i { font-size: 60px; margin-bottom: 20px; color: #ccc; }
+    </style>
+</head>
+<body>
+    <!-- 登录检查 -->
+    <script>if (!localStorage.getItem('currentUser')) window.location.href = 'login.html';</script>
+
+    <div class="layui-layout layui-layout-admin">
+        <!-- 头部导航 -->
+        <div class="layui-header">
+            <div class="layui-logo"><i class="fa fa-futbol-o"></i> 体育用品销售系统</div>
+            <ul class="layui-nav layui-layout-left">
+                <li class="layui-nav-item"><a href="index.html">商品管理</a></li>
+                <li class="layui-nav-item"><a href="cart.html">购物车</a></li>
+                <li class="layui-nav-item layui-this"><a href="orders.html">我的订单</a></li>
+            </ul>
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item">
+                    <a href="javascript:;"><img src="https://picsum.photos/id/1005/200/200" class="layui-nav-img"><span id="username">用户名</span></a>
+                    <dl class="layui-nav-child"><dd><a href="javascript:;" id="logout">退出登录</a></dd></dl>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 侧边栏 -->
+        <div class="layui-side">
+            <div class="layui-side-scroll">
+                <ul class="layui-nav layui-nav-tree">
+                    <li class="layui-nav-item">
+                        <a href="javascript:;">商品管理</a>
+                        <dl class="layui-nav-child"><dd><a href="index.html">商品列表</a></dd></dl>
+                    </li>
+                    <li class="layui-nav-item layui-this">
+                        <a href="javascript:;">订单管理</a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="cart.html">购物车</a></dd>
+                            <dd class="layui-this"><a href="orders.html">我的订单</a></dd>
+                        </dl>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="layui-body" style="padding: 15px;">
+            <div class="layui-card">
+                <div class="layui-card-header">
+                    <h2>我的订单</h2>
+                </div>
+                <div class="layui-card-body">
+                    <!-- 搜索区域 -->
+                    <div class="search-bar">
+                        <form class="layui-form" lay-filter="searchForm">
+                            <div class="layui-form-item">
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">订单号</label>
+                                    <div class="layui-input-inline"><input type="text" name="orderNo" placeholder="请输入订单号" class="layui-input"></div>
+                                </div>
+                                <div class="layui-inline">
+                                    <label class="layui-form-label">订单状态</label>
+                                    <div class="layui-input-inline">
+                                        <select name="status">
+                                            <option value="">全部状态</option>
+                                            <option value="待付款">待付款</option>
+                                            <option value="已付款">已付款</option>
+                                            <option value="已发货">已发货</option>
+                                            <option value="已完成">已完成</option>
+                                            <option value="已取消">已取消</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button class="layui-btn" id="searchBtn"><i class="fa fa-search"></i> 搜索</button>
+                                <button type="reset" class="layui-btn layui-btn-primary" id="resetBtn"><i class="fa fa-refresh"></i> 重置</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div id="orderList">
+                        <!-- 订单内容将动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="layui-footer">© 体育用品销售系统 - 版权所有</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/layui-src/dist/layui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script>
+        layui.use(['form', 'layer'], function() {
+            const form = layui.form;
+            const layer = layui.layer;
+
+            // 加载用户信息
+            function loadUserInfo() {
+                const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+                $('#username').text(user.username || '用户');
+            }
+
+            // 退出登录
+            $('#logout').click(() => {
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            });
+
+            // 订单数据操作
+            const getOrders = () => JSON.parse(localStorage.getItem('orders') || '[]');
+            const saveOrders = (data) => localStorage.setItem('orders', JSON.stringify(data));
+
+            // 渲染订单列表
+            function renderOrders() {
+                const orders = getOrders();
+                const orderNo = $('input[name="orderNo"]').val().trim();
+                const status = $('select[name="status"]').val();
+                const orderList = $('#orderList').empty();
+                
+                // 筛选订单
+                const filtered = orders.filter(order => 
+                    (!orderNo || order.id.toString().includes(orderNo)) &&
+                    (!status || order.status === status)
+                );
+                
+                if (!filtered.length) {
+                    return orderList.html(`
+                        <div class="empty-order">
+                            <i class="fa fa-file-text-o"></i>
+                            <p>您暂无相关订单</p>
+                            <p><a href="index.html" class="layui-btn layui-btn-primary">去购物</a></p>
+                        </div>
+                    `);
+                }
+                
+                filtered.forEach(order => {
+                    let orderHtml = `
+                        <div class="order-item" data-id="${order.id}">
+                            <div class="order-header">
+                                <div>
+                                    <span>订单号：${order.id}</span>
+                                    <span style="margin-left:20px;">创建时间：${order.createTime}</span>
+                                </div>
+                                <div class="order-status">${order.status}</div>
+                            </div>
+                            <div class="order-body">
+                    `;
+                    
+                    // 渲染订单商品
+                    order.items.forEach(item => {
+                        const itemTotal = (item.price * item.quantity).toFixed(2);
+                        orderHtml += `
+                            <div class="order-goods">
+                                <div class="order-goods-img"><img src="${item.imageUrl}" alt="${item.name}"></div>
+                                <div class="order-goods-info"><h4>${item.name}</h4></div>
+                                <div class="order-goods-price">¥${item.price.toFixed(2)}</div>
+                                <div class="order-goods-quantity">x${item.quantity}</div>
+                                <div class="order-goods-total">¥${itemTotal}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    // 订单操作按钮
+                    let actions = '';
+                    switch(order.status) {
+                        case '待付款':
+                            actions = `
+                                <button class="layui-btn pay-btn" data-id="${order.id}">付款</button>
+                                <button class="layui-btn layui-btn-danger cancel-btn" data-id="${order.id}">取消订单</button>
+                            `;
+                            break;
+                        case '已付款':
+                            actions = '<button class="layui-btn layui-btn-primary">待发货</button>';
+                            break;
+                        case '已发货':
+                            actions = '<button class="layui-btn confirm-receipt-btn" data-id="${order.id}">确认收货</button>';
+                            break;
+                        default:
+                            actions = '<button class="layui-btn layui-btn-primary" disabled>已完成</button>';
+                    }
+                    
+                    orderHtml += `
+                            </div>
+                            <div class="order-footer">
+                                <div class="order-total">订单总金额：¥${order.totalAmount.toFixed(2)}</div>
+                                <div>${actions}</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    orderList.append(orderHtml);
+                });
+            }
+
+            // 支付订单
+            $(document).on('click', '.pay-btn', function() {
+                const id = parseInt($(this).data('id'));
+                const orders = getOrders();
+                const index = orders.findIndex(o => o.id === id);
+                
+                if (index !== -1) {
+                    layer.confirm('确定要支付订单吗？', () => {
+                        orders[index].status = '已付款';
+                        // 模拟支付后自动发货
+                        setTimeout(() => {
+                            orders[index].status = '已发货';
+                            saveOrders(orders);
+                            renderOrders();
+                        }, 1000);
+                        saveOrders(orders);
+                        renderOrders();
+                        layer.msg('支付成功');
+                    });
+                }
+            });
+
+            // 取消订单
+            $(document).on('click', '.cancel-btn', function() {
+                const id = parseInt($(this).data('id'));
+                const orders = getOrders();
+                const index = orders.findIndex(o => o.id === id);
+                
+                if (index !== -1) {
+                    layer.confirm('确定要取消订单吗？', () => {
+                        orders[index].status = '已取消';
+                        saveOrders(orders);
+                        renderOrders();
+                        layer.msg('订单已取消');
+                    });
+                }
+            });
+
+            // 确认收货
+            $(document).on('click', '.confirm-receipt-btn', function() {
+                const id = parseInt($(this).data('id'));
+                const orders = getOrders();
+                const index = orders.findIndex(o => o.id === id);
+                
+                if (index !== -1) {
+                    layer.confirm('确定已收到商品吗？', () => {
+                        orders[index].status = '已完成';
+                        saveOrders(orders);
+                        renderOrders();
+                        layer.msg('已确认收货');
+                    });
+                }
+            });
+
+            // 搜索和重置
+            $('#searchBtn').click(() => renderOrders());
+            $('#resetBtn').click(() => {
+                $('form')[0].reset();
+                form.render();
+                renderOrders();
+            });
+
+            // 初始化
+            loadUserInfo();
+            renderOrders();
+        });
+    </script>
+</body>
+</html>
